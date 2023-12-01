@@ -1,7 +1,7 @@
 import numpy as np
 import taichi as ti
 
-from cube_object import DIY_MATERIAL, SOLID_CUBE
+from .cube_object import DIY_MATERIAL, SOLID_CUBE
 
 
 class Controller:

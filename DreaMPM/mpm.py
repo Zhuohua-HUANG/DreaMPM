@@ -1,10 +1,12 @@
 import taichi as ti
 
-from cube_object import DIY_MATERIAL, SOLID_CUBE, CubeObject
+from .cube_object import DIY_MATERIAL, SOLID_CUBE, CubeObject
 
 ti.init(arch=ti.gpu)
 
-
+"""
+An implementation of MPM using Corotated model, APIC and semi-implicit advection
+"""
 @ti.data_oriented
 class MPM:
     def __init__(self, G_number, max_hard):

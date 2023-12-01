@@ -1,10 +1,9 @@
 import json
-
 import taichi as ti
 
-from cube_object import CubeObject
-from materials import Material
-from preset import Preset
+from .cube_object import CubeObject
+from .materials import Material
+from .preset import Preset
 
 
 class ConfigLoader:
