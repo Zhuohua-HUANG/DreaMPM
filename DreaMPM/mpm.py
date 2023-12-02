@@ -1,7 +1,7 @@
 import taichi as ti
 
-from .objects import CubeObject
 from .materials import DIY_MATERIAL, SOLID_CUBE
+from .objects import CubeObject
 
 ti.init(arch=ti.gpu)
 
@@ -64,21 +64,11 @@ class MPM:
             )
             self.F_Jp[i] = 1
             self.def_grad[i] = ti.Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+            self.C[i] = ti.Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
             self.F_v[i] = ti.Vector([0.0, 0.0, 0.0])
             self.F_materials[i] = material
             self.F_colors_random[i] = ti.Vector([ti.random(), ti.random(), ti.random(), ti.random()])
             self.F_used[i] = 1
-
-    @ti.kernel
-    def set_all_unused(self):
-        for p in self.F_used:
-            self.F_used[p] = 0
-            # placing in a very far place
-            self.F_x[p] = ti.Vector([90000.0, 90000.0, 90000.0])
-            self.F_Jp[p] = 1
-            self.def_grad[p] = ti.Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
-            self.C[p] = ti.Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
-            self.F_v[p] = ti.Vector([0.0, 0.0, 0.0])
 
     @ti.kernel
     def reset(self):
@@ -90,7 +80,6 @@ class MPM:
 
     def init_objs(self, presets):
         objects = presets.objects
-        self.set_all_unused()
         total_vol = 0
         for obj in objects:
             total_vol += obj.volume

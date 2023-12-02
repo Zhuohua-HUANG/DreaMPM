@@ -12,22 +12,22 @@ max hard: 4
 #max hard: 2.5
 
 objects:
-    - id: 0
-      name: DIY_MATERIAL
-      default color: [1.0, 1.0, 1.0, 0.5]
+  - id: 0
+    name: DIY_MATERIAL
+    default color: [ 1.0, 1.0, 1.0, 1.0 ]
 
-    - id: 1
-      name: SOLID_CUBE
-      default color: [0.93, 0.33, 0.23, 0.5]
+  - id: 1
+    name: SOLID_CUBE
+    default color: [ 0.93, 0.33, 0.23, 1.0 ]
 
 
 presets:
-    - name: DIY_MATERIAL
-      material: [0]
-      minimum: [[0.35, 0.35, 0.35]]
-      size: [[0.25, 0.25, 0.25]]
+  - name: DIY_MATERIAL
+    material: [ 0 ]
+    minimum: [ [ 0.35, 0.35, 0.35 ] ]
+    size: [ [ 0.25, 0.25, 0.25 ] ]
 
-    - name: DIY_MATERIAL and SOLID_CUBE
-      material: [0,1]
-      minimum: [[0.40, 0.25, 0.40],[0.30, 0.6, 0.30]]
-      size: [[0.25, 0.25, 0.25],[0.25, 0.25, 0.25]]
+  - name: DIY_MATERIAL and SOLID_CUBE
+    material: [ 1, 0 ]
+    minimum: [ [ 0.30, 0.6, 0.30 ], [ 0.40, 0.25, 0.40 ] ]
+    size: [ [ 0.25, 0.25, 0.25 ], [ 0.25, 0.25, 0.25 ] ]
