@@ -1,12 +1,15 @@
 import taichi as ti
 
-from .objects import DIY_MATERIAL, SOLID_CUBE, CubeObject
+from .objects import CubeObject
+from .materials import DIY_MATERIAL, SOLID_CUBE
 
 ti.init(arch=ti.gpu)
 
 """
 An implementation of MPM using Corotated model, APIC and semi-implicit advection
 """
+
+
 @ti.data_oriented
 class MPM:
     def __init__(self, G_number, max_hard):
@@ -71,7 +74,7 @@ class MPM:
         for p in self.F_used:
             self.F_used[p] = 0
             # placing in a very far place
-            self.F_x[p] = ti.Vector([533799.0, 533799.0, 533799.0])
+            self.F_x[p] = ti.Vector([90000.0, 90000.0, 90000.0])
             self.F_Jp[p] = 1
             self.def_grad[p] = ti.Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
             self.C[p] = ti.Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
@@ -108,7 +111,8 @@ class MPM:
     def set_color_by_material(self, mat_color: ti.types.ndarray()):
         for i in range(self.P_number):
             m_id = self.F_materials[i]
-            self.F_colors[i] = ti.Vector([mat_color[m_id, 0], mat_color[m_id, 1], mat_color[m_id, 2], 1.0])
+            self.F_colors[i] = ti.Vector(
+                [mat_color[m_id, 0], mat_color[m_id, 1], mat_color[m_id, 2], mat_color[m_id, 3]])
 
     @ti.kernel
     def substep(self, dt: float, g_x: float, g_y: float, g_z: float,

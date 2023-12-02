@@ -1,7 +1,7 @@
 import numpy as np
 import taichi as ti
 
-from .objects import DIY_MATERIAL, SOLID_CUBE
+from .materials import DIY_MATERIAL, SOLID_CUBE
 
 """
 The GUI and Layout of DreaMPM using taichi.ui
@@ -11,6 +11,8 @@ The GUI and Layout of DreaMPM using taichi.ui
     - Color
     - Material Setting
 """
+
+
 class Controller:
     def __init__(self, width, height, presets, materials):
         res = (width, height)
@@ -54,7 +56,7 @@ class Controller:
 
         with self.gui.sub_window("Controller", 0., 0.0, 0.25, 0.1) as w:
             self.dt[0] = w.slider_float("Time Step", self.dt[0] * 10000, 0, max_timestep) / 10000
-            if w.button("restart"):
+            if w.button("Restart"):
                 self.init(mpm)
 
         with self.gui.sub_window("Presets", 0., 0.45, 0.2, 0.1) as w:
@@ -65,17 +67,39 @@ class Controller:
             if self.curr_preset_id != old_preset:
                 self.init(mpm)
 
-        with self.gui.sub_window("Gravity", 0., 0.55, 0.2, 0.15) as w:
+        with self.gui.sub_window("Gravity", 0., 0.55, 0.2, 0.1) as w:
             self.GRAVITY[0] = w.slider_float("x", self.GRAVITY[0], -10, 10)
             self.GRAVITY[1] = w.slider_float("y", self.GRAVITY[1], -10, 10)
             self.GRAVITY[2] = w.slider_float("z", self.GRAVITY[2], -10, 10)
 
-        with self.gui.sub_window("Color", 0., 0.7, 0.2, 0.1) as w:
-            self.use_random_colors = w.checkbox("use_random_colors", self.use_random_colors)
+        with self.gui.sub_window("Color", 0., 0.65, 0.2, 0.15) as w:
+            self.use_random_colors = w.checkbox("Use Random Colors", self.use_random_colors)
             if not self.use_random_colors:
-                self.materials[DIY_MATERIAL].color = w.color_edit_3("material color",
-                                                                    self.materials[
-                                                                        DIY_MATERIAL].color)
+                old_color = (self.materials[DIY_MATERIAL].color[0], self.materials[DIY_MATERIAL].color[1],
+                             self.materials[DIY_MATERIAL].color[2])
+                new_color = w.color_edit_3("Material Color", old_color)
+                if old_color != new_color:
+                    for i in range(0, 3):
+                        self.materials[DIY_MATERIAL].color[i] = new_color[i]
+
+                old_transparency = self.materials[DIY_MATERIAL].color[3]
+                new_transparency = w.slider_float("Material Transparency", old_transparency, 0.0, 1.0)
+                if old_transparency != new_transparency:
+                    self.materials[DIY_MATERIAL].color[3] = new_transparency
+
+                if self.curr_preset_id == 1:
+                    old_color2 = (self.materials[SOLID_CUBE].color[0], self.materials[SOLID_CUBE].color[1],
+                                  self.materials[SOLID_CUBE].color[2])
+                    new_color2 = w.color_edit_3("Cube Color", old_color2)
+                    if old_color2 != new_color2:
+                        for i in range(0, 3):
+                            self.materials[SOLID_CUBE].color[i] = new_color2[i]
+
+                    old_transparency2 = self.materials[SOLID_CUBE].color[3]
+                    new_transparency2 = w.slider_float("Cube Transparency", old_transparency2, 0.0, 1.0)
+                    if old_transparency2 != new_transparency2:
+                        self.materials[SOLID_CUBE].color[3] = new_transparency2
+
                 material_colors = []
                 material_colors.append(self.materials[DIY_MATERIAL].color)
                 material_colors.append(self.materials[SOLID_CUBE].color)

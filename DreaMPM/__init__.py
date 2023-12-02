@@ -1,6 +1,6 @@
 from .config_loader import *
 from .objects import *
-from .materials import Material
+from .materials import *
 from .mpm import MPM
 from .preset import Preset
 from .render import Render
