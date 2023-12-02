@@ -23,13 +23,13 @@ class MPM:
         self.dt = [2e-4]
 
         self.dx = 1 / G_number
-        p_rho = 1  # 1
+        p_rho = 1
         self.p_vol = (self.dx * 0.5) ** 2
         self.p_mass = self.p_vol * p_rho
         self.bound = 3
-        self.V_parameter = 0.5
-        self.F_x = ti.Vector.field(self.dim, float, self.P_number)
-        self.F_v = ti.Vector.field(self.dim, float, self.P_number)
+        self.V_parameter = 0.5  # our proposed V parameter
+        self.F_x = ti.Vector.field(self.dim, float, self.P_number)  # particle position
+        self.F_v = ti.Vector.field(self.dim, float, self.P_number)  # particle velocity
         self.C = ti.Matrix.field(self.dim, self.dim, float, self.P_number)
         self.def_grad = ti.Matrix.field(3, 3, dtype=float, shape=self.P_number)  # deformation gradient
         self.F_Jp = ti.field(float,
