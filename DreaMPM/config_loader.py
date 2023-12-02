@@ -1,16 +1,18 @@
-import json
 import taichi as ti
+import yaml
 
-from .cube_object import CubeObject
+from .objects import CubeObject
 from .materials import Material
 from .preset import Preset
 
 
+"""
+Load config from config yaml file
+"""
 class ConfigLoader:
 
-    def load_presets(self, path):
-        with open(path) as j:
-            cfg = json.load(j)['presets']
+    def load_presets(self):
+        cfg = self.config['presets']
         presets = []
         for i in range(0, len(cfg)):
             objects = []
@@ -22,14 +24,19 @@ class ConfigLoader:
             presets.append(preset)
         return presets
 
-    def load_materials(self, path):
-        with open(path) as j:
-            cfg = json.load(j)['objects']
+    def load_materials(self):
+        cfg = self.config['objects']
         materials = []
         for i in range(0, len(cfg)):
             materials.append(Material(cfg[i]))
         return materials
 
     def __init__(self, path):
-        self.materials = self.load_materials(path)
-        self.presets = self.load_presets(path)
+        self.config = yaml.safe_load(open(path))
+        self.width = self.config["width"]
+        self.height = self.config["height"]
+        self.G_number = self.config["grid number"]
+        self.max_timestep = self.config["max timestep"]
+        self.max_hard = self.config["max hard"]
+        self.materials = self.load_materials()
+        self.presets = self.load_presets()

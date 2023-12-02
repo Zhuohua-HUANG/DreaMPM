@@ -1,9 +1,16 @@
 import numpy as np
 import taichi as ti
 
-from .cube_object import DIY_MATERIAL, SOLID_CUBE
+from .objects import DIY_MATERIAL, SOLID_CUBE
 
-
+"""
+The GUI and Layout of DreaMPM using taichi.ui
+    - Controller
+    - Presets
+    - Gravity
+    - Color
+    - Material Setting
+"""
 class Controller:
     def __init__(self, width, height, presets, materials):
         res = (width, height)
@@ -49,6 +56,30 @@ class Controller:
             self.dt[0] = w.slider_float("Time Step", self.dt[0] * 10000, 0, max_timestep) / 10000
             if w.button("restart"):
                 self.init(mpm)
+
+        with self.gui.sub_window("Presets", 0., 0.45, 0.2, 0.1) as w:
+            old_preset = self.curr_preset_id
+            for i in range(len(self.presets)):
+                if w.checkbox(self.presets[i].name, self.curr_preset_id == i):
+                    self.curr_preset_id = i
+            if self.curr_preset_id != old_preset:
+                self.init(mpm)
+
+        with self.gui.sub_window("Gravity", 0., 0.55, 0.2, 0.15) as w:
+            self.GRAVITY[0] = w.slider_float("x", self.GRAVITY[0], -10, 10)
+            self.GRAVITY[1] = w.slider_float("y", self.GRAVITY[1], -10, 10)
+            self.GRAVITY[2] = w.slider_float("z", self.GRAVITY[2], -10, 10)
+
+        with self.gui.sub_window("Color", 0., 0.7, 0.2, 0.1) as w:
+            self.use_random_colors = w.checkbox("use_random_colors", self.use_random_colors)
+            if not self.use_random_colors:
+                self.materials[DIY_MATERIAL].color = w.color_edit_3("material color",
+                                                                    self.materials[
+                                                                        DIY_MATERIAL].color)
+                material_colors = []
+                material_colors.append(self.materials[DIY_MATERIAL].color)
+                material_colors.append(self.materials[SOLID_CUBE].color)
+                mpm.set_color_by_material(np.array(material_colors, dtype=np.float32))
 
         with self.gui.sub_window("Material Setting", 0., 0.8, 1.0, 0.2) as w:
             self.auto_restart = w.checkbox("Auto Restart", self.auto_restart)
@@ -97,27 +128,3 @@ class Controller:
                     self.init(mpm)
                 else:
                     mpm.reset()
-
-        with self.gui.sub_window("Color", 0., 0.7, 0.2, 0.1) as w:
-            self.use_random_colors = w.checkbox("use_random_colors", self.use_random_colors)
-            if not self.use_random_colors:
-                self.materials[DIY_MATERIAL].color = w.color_edit_3("material color",
-                                                                    self.materials[
-                                                                        DIY_MATERIAL].color)
-                material_colors = []
-                material_colors.append(self.materials[DIY_MATERIAL].color)
-                material_colors.append(self.materials[SOLID_CUBE].color)
-                mpm.set_color_by_material(np.array(material_colors, dtype=np.float32))
-
-        with self.gui.sub_window("Gravity", 0., 0.55, 0.2, 0.15) as w:
-            self.GRAVITY[0] = w.slider_float("x", self.GRAVITY[0], -10, 10)
-            self.GRAVITY[1] = w.slider_float("y", self.GRAVITY[1], -10, 10)
-            self.GRAVITY[2] = w.slider_float("z", self.GRAVITY[2], -10, 10)
-
-        with self.gui.sub_window("Presets", 0., 0.45, 0.2, 0.1) as w:
-            old_preset = self.curr_preset_id
-            for i in range(len(self.presets)):
-                if w.checkbox(self.presets[i].name, self.curr_preset_id == i):
-                    self.curr_preset_id = i
-            if self.curr_preset_id != old_preset:
-                self.init(mpm)

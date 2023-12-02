@@ -1,6 +1,6 @@
 import taichi as ti
 
-from .cube_object import DIY_MATERIAL, SOLID_CUBE, CubeObject
+from .objects import DIY_MATERIAL, SOLID_CUBE, CubeObject
 
 ti.init(arch=ti.gpu)
 

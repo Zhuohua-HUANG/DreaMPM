@@ -1,5 +1,5 @@
 from .config_loader import *
-from .cube_object import *
+from .objects import *
 from .materials import Material
 from .mpm import MPM
 from .preset import Preset

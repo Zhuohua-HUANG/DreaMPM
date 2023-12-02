@@ -7,13 +7,14 @@ from .render import Render
 Material dreamworks based on MPM
 """
 class DMPM:
-    def __init__(self, width, height, G_number, max_timestep, max_hard, config_path):
-        self.max_timestep = max_timestep
-        self.max_hard = max_hard
-        self.steps = 25  # time step
-        self.mpm = MPM(G_number, max_hard)
+    def __init__(self, config_path):
         config = ConfigLoader(config_path)
-        self.controller = Controller(width, height, config.presets, config.materials)
+        self.max_timestep = config.max_timestep
+        self.max_hard = config.max_hard
+        self.steps = 25  # time step
+        self.mpm = MPM(config.G_number, config.max_hard)
+
+        self.controller = Controller(config.width, config.height, config.presets, config.materials)
         self.controller.init(self.mpm)
         self.render = Render(self.controller.window)
 
