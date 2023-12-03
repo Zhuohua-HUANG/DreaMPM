@@ -111,22 +111,25 @@ class MPM:
         lower = 1 + plasticity_lower_bound / 10000
         upper = 1 + plasticity_upper_bound / 10000
 
+        # init
         for I in ti.grouped(self.F_grid_m):
             self.F_grid_v[I] = ti.zero(self.F_grid_v[I])
             self.F_grid_m[I] = 0
         ti.loop_config(block_dim=self.G_number)
+
         # P2G
         for p in self.F_x:
             if self.F_used[p] == 0:
                 continue
+
             Xp = self.F_x[p] / self.dx
             base = int(Xp - 0.5)
             fx = Xp - base
             w = [0.5 * (1.5 - fx) ** 2, 0.75 - (fx - 1) ** 2, 0.5 * (fx - 0.5) ** 2]
 
             # Deformation gradient update moved to the front (elastic deformation) (hack!)
-            self.def_grad[p] = (ti.Matrix.identity(float, 3) + dt * self.C[p]) @ self.def_grad[
-                p]  # deformation gradient update
+            self.def_grad[p] = ((ti.Matrix.identity(float, 3) + dt * self.C[p]) @
+                                self.def_grad[p])  # deformation gradient update
 
             # Hardening coefficient: material harder when compressed
             h = ti.exp(10 * (1.0 - self.F_Jp[p]))  # Plastic change effect the h, or the h is always 1
@@ -196,6 +199,7 @@ class MPM:
                 self.F_grid_v[base + offset] += weight * (self.p_mass * self.F_v[p] + affine @ dpos)
                 self.F_grid_m[base + offset] += weight * self.p_mass
 
+        # Grid Operations
         for I in ti.grouped(self.F_grid_m):
             if self.F_grid_m[I] > 0:
                 self.F_grid_v[I] /= self.F_grid_m[I]
@@ -207,6 +211,7 @@ class MPM:
 
             self.F_grid_v[I] = ti.select(cond, 0, self.F_grid_v[I])
         ti.loop_config(block_dim=self.G_number)
+
         # G2P
         for p in self.F_x:
             if self.F_used[p] == 0:
