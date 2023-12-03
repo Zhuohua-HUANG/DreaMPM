@@ -1,14 +1,15 @@
 import taichi as ti
 import yaml
 
-from .objects import CubeObject
 from .materials import Material
+from .objects import CubeObject
 from .preset import Preset
-
 
 """
 Load config from config yaml file
 """
+
+
 class ConfigLoader:
 
     def load_presets(self):
@@ -25,7 +26,7 @@ class ConfigLoader:
         return presets
 
     def load_materials(self):
-        cfg = self.config['objects']
+        cfg = self.config['materials']
         materials = []
         for i in range(0, len(cfg)):
             materials.append(Material(cfg[i]))
@@ -33,10 +34,13 @@ class ConfigLoader:
 
     def __init__(self, path):
         self.config = yaml.safe_load(open(path))
+
+        # hyperparameter
         self.width = self.config["width"]
         self.height = self.config["height"]
         self.G_number = self.config["grid number"]
         self.max_timestep = self.config["max timestep"]
         self.max_hard = self.config["max hard"]
+
         self.materials = self.load_materials()
         self.presets = self.load_presets()

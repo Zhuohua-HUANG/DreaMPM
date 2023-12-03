@@ -11,7 +11,7 @@ max hard: 4
 #max timestep: 2
 #max hard: 2.5
 
-objects:
+materials:
   - id: 0
     name: DIY_MATERIAL
     default color: [ 1.0, 1.0, 1.0, 1.0 ]
