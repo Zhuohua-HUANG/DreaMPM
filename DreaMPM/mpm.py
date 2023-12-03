@@ -45,22 +45,12 @@ class MPM:
         self.neighbour = (3,) * self.dim
 
     @ti.kernel
-    def init_cube_object(
-            self,
-            first_par: int,
-            last_par: int,
-            x_begin: float,
-            y_begin: float,
-            z_begin: float,
-            x_size: float,
-            y_size: float,
-            z_size: float,
-            material: int,
-    ):
+    def init_cube_object(self, first_par: int, last_par: int, x_begin: float, y_begin: float, z_begin: float,
+                         x_size: float, y_size: float, z_size: float, material: int):
         for i in range(first_par, last_par):
-            self.F_x[i] = ti.Vector([ti.random() for i in range(self.dim)]) * ti.Vector(
-                [x_size, y_size, z_size]) + ti.Vector(
-                [x_begin, y_begin, z_begin]
+            self.F_x[i] = (
+                    ti.Vector([ti.random() for i in range(self.dim)]) * ti.Vector([x_size, y_size, z_size]) +
+                    ti.Vector([x_begin, y_begin, z_begin])
             )
             self.F_Jp[i] = 1
             self.def_grad[i] = ti.Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
