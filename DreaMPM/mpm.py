@@ -18,7 +18,7 @@ class MPM:
         self.max_hard = max_hard
         self.dim = 3
         # self.P_number = self.G_number ** self.dim // 2 ** (self.dim - 1)  # 65536 or 8192
-        self.P_number = PLY_NUM+FLUID_NUM
+        self.P_number = PLY_NUM + FLUID_NUM
         print("particle number:", self.P_number)  # you can check the particle number right here
 
         # time step
@@ -31,7 +31,7 @@ class MPM:
         self.bound = 3
         self.V_parameter = 0.5  # our proposed V parameter
         self.F_x = ti.Vector.field(self.dim, float, self.P_number)  # particle position
-        self.PLY_x=ti.Vector.field(self.dim, float, PLY_NUM)  # particle position
+        self.PLY_x = ti.Vector.field(self.dim, float, PLY_NUM)  # particle position
         self.F_v = ti.Vector.field(self.dim, float, self.P_number)  # particle velocity
         self.C = ti.Matrix.field(self.dim, self.dim, float, self.P_number)
         self.def_grad = ti.Matrix.field(3, 3, dtype=float, shape=self.P_number)  # deformation gradient
@@ -64,10 +64,10 @@ class MPM:
             self.F_used[i] = 1
 
     @ti.kernel
-    def process_from_ply(self, ply_num:int, material:int):
+    def process_from_ply(self, ply_num: int, material: int):
         for i in range(ply_num):
-            j = FLUID_NUM+i
-            self.F_x[j]=self.PLY_x[i]
+            j = FLUID_NUM + i
+            self.F_x[j] = self.PLY_x[i]
             self.F_Jp[j] = 1
             self.def_grad[j] = ti.Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
             self.C[j] = ti.Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
@@ -77,7 +77,7 @@ class MPM:
             self.F_used[j] = 1
 
     @ti.kernel
-    def set_fluid_unused(self, ply_num:int, material:int):
+    def set_fluid_unused(self, ply_num: int, material: int):
         for i in range(FLUID_NUM):
             self.F_used[i] = 0
             # basically throw them away so they aren't rendered
@@ -92,12 +92,11 @@ class MPM:
         container_ply = PlyImporter("unlid-container.ply")
         self.PLY_x.from_numpy(container_ply.get_array())
         self.set_fluid_unused(container_ply.get_count(), WATER)
-        self.process_from_ply( container_ply.get_count(), BOX)
-
+        self.process_from_ply(container_ply.get_count(), BOX)
 
     @ti.kernel
     def spawn_fluid(self, first_par: int, last_par: int, x_begin: float, y_begin: float, z_begin: float,
-                         x_size: float, y_size: float, z_size: float, material: int):
+                    x_size: float, y_size: float, z_size: float, material: int):
         for i in range(first_par, last_par):
             self.F_x[i] = (
                     ti.Vector([ti.random() for i in range(self.dim)]) * ti.Vector([x_size, y_size, z_size]) +
@@ -109,6 +108,7 @@ class MPM:
             self.F_v[i] = ti.Vector([0.0, -3.0, 0.0])
             self.F_materials[i] = material
             self.F_used[i] = 1
+
     def init_cube_object(self, first_par: int, last_par: int, x_begin: float, y_begin: float, z_begin: float,
                          x_size: float, y_size: float, z_size: float, material: int):
         for i in range(first_par, last_par):
@@ -123,6 +123,7 @@ class MPM:
             self.F_materials[i] = material
             self.F_colors_random[i] = ti.Vector([ti.random(), ti.random(), ti.random(), ti.random()])
             self.F_used[i] = 1
+
     @ti.kernel
     def reset(self):
         for p in self.F_used:
@@ -184,9 +185,9 @@ class MPM:
             self.def_grad[p] = ((ti.Matrix.identity(float, 3) + dt * self.C[p]) @
                                 self.def_grad[p])  # deformation gradient update
 
-            # Hardening coefficient: material harder when compressed
-            h = ti.exp(10 * (1.0 - self.F_Jp[p]))  # Plastic change effect the h, or the h is always 1
-
+            # # Hardening coefficient: material harder when compressed
+            # h = ti.exp(10 * (1.0 - self.F_Jp[p]))  # Plastic change effect the h, or the h is always 1
+            h = 1.0
             if is_elastic_object:  # elastic object, make it softer
                 h = H  # 0.1 ~ 1.0
 
@@ -205,7 +206,7 @@ class MPM:
                 orgin_sig = sig[d, d]  # singular values
                 new_sig = orgin_sig
                 if self.F_materials[p] == WATER and not is_elastic_object:  # DIY_MATERIAL with Plasticity
-                    mu=0
+                    mu = 0
                     new_sig = ti.min(
                         ti.max(
                             orgin_sig,
@@ -226,8 +227,6 @@ class MPM:
             else:
                 # Reconstruct remain elastic deformation gradient after plasticity
                 self.def_grad[p] = U @ sig @ V.transpose()
-            if self.F_materials[p] == WATER and not is_elastic_object:  # DIY_MATERIAL with Plasticity
-                mu=0
             # Corotated used elastic F_dg
             # stress_part1
             # = P(F) * F.transposed()
@@ -239,11 +238,17 @@ class MPM:
                         float, 3
                     ) * la * J * (J - 1)
             )
+            stress = (-dt * self.p_vol * 4) * stress_part1 / self.dx ** 2
+            if self.F_materials[p] == WATER:
+                stress_part1 = 400 * dt * self.C[p].trace()
+                stress = ti.Matrix.identity(float, self.dim) *((-dt * self.p_vol * 4) * stress_part1 / self.dx ** 2)
             # stress
             # = 4*∆t / ∆x**2 * V * P(F) * F.transposed()
             # = 4*∆t / ∆x**2 * V * stress_part1
-            stress = (-dt * self.p_vol * 4) * stress_part1 / self.dx ** 2
+
             affine = self.p_mass * self.C[p] + stress
+
+
 
             # 3d Grid momentum
             for offset in ti.static(ti.grouped(ti.ndrange(*self.neighbour))):
