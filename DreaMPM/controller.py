@@ -16,7 +16,7 @@ The GUI and Layout of DreaMPM using taichi.ui
 class Controller:
     def __init__(self, width, height, presets, materials):
         res = (width, height)
-        self.window = ti.ui.Window("MPM Material Dreamworks", res, vsync=True)
+        self.window = ti.ui.Window("DreaMPM - MPM Material Dreamworks", res, vsync=True)
         self.gui = self.window.get_gui()
         self.presets = presets
         self.materials = materials
@@ -72,7 +72,7 @@ class Controller:
             self.GRAVITY[1] = w.slider_float("y", self.GRAVITY[1], -10, 10)
             self.GRAVITY[2] = w.slider_float("z", self.GRAVITY[2], -10, 10)
 
-        with self.gui.sub_window("Color", 0., 0.65, 0.2, 0.15) as w:
+        with self.gui.sub_window("Color", 0., 0.65, 0.25, 0.15) as w:
             self.use_random_colors = w.checkbox("Use Random Colors", self.use_random_colors)
             if not self.use_random_colors:
                 old_color = (self.materials[DIY_MATERIAL].color[0], self.materials[DIY_MATERIAL].color[1],
@@ -124,7 +124,7 @@ class Controller:
 
             old_Viscosity = self.V_parameter
             if not self.is_elastic_object:
-                self.V_parameter = w.slider_float("low: Viscosity; high: Stiffness", self.V_parameter, low, 0.7)
+                self.V_parameter = w.slider_float("V (low: Viscosity; high: Stiffness)", self.V_parameter, low, 0.7)
                 if old_Viscosity != self.V_parameter:
                     self.Lame[0], self.Lame[1] = self.viscosity_to_lame_parameter(self.V_parameter)
 
@@ -138,8 +138,8 @@ class Controller:
             if not self.is_elastic_object:
                 self.plasticity_boundary[0] = w.slider_float("plasticity lower bound", self.plasticity_boundary[0],
                                                              -400, -100)
-                self.plasticity_boundary[1] = w.slider_float("plasticity upper bound", self.plasticity_boundary[1], 0,
-                                                             100)
+                self.plasticity_boundary[1] = w.slider_float("plasticity upper bound", self.plasticity_boundary[1],
+                                                             0, 100)
 
             if self.is_elastic_object != old_is_elastic_object \
                     or old_H != self.H[0] \
