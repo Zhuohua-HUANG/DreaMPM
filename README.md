@@ -1,4 +1,10 @@
-# DreaMPM
+<h1 align="center">
+  <br>DreaMPM<br>
+</h1>
+<div align="center">
+<img src="https://img.shields.io/badge/build-passing-brightgreen"/>
+<img src="https://img.shields.io/badge/Taichi-v1.6.0-blue"/>
+</div>
 
 A 3D real-time material dreamworks based on MPM.
 
