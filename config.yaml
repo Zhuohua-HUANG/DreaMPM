@@ -2,24 +2,25 @@ width: 1920
 height: 1080
 
 # less particles, num: 8192 (Recommended)
-grid number: 32
-max timestep: 4
-max hard: 4
+#grid number: 32
+#max timestep: 4
+#max hard: 4
 
 ## more particles, num: 65536 (Unstable)
-#grid number: 64
-#max timestep: 2
-#max hard: 2.5
+grid number: 64
+max timestep: 2
+max hard: 2.5
 
 # you can only change materials' color
 materials:
   - id: 0
-    name: DIY_MATERIAL
-    default color: [ 1.0, 1.0, 1.0, 1.0 ]
+    name: WATER
+    default color: [0.00, 0.71, 1.0, 1.0]
 
   - id: 1
-    name: SOLID_CUBE
-    default color: [ 0.93, 0.33, 0.23, 1.0 ]
+    name: BOX
+    default color: [0.9,0.9,0.9,0.2]
+
 
 # set any preset you like
 presets:

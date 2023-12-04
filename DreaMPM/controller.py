@@ -1,7 +1,7 @@
 import numpy as np
 import taichi as ti
 
-from .materials import DIY_MATERIAL, SOLID_CUBE
+from .materials import WATER, BOX
 
 """
 The GUI and Layout of DreaMPM using taichi.ui
@@ -30,16 +30,19 @@ class Controller:
         self.Lame = [self.E / (2 * (1 + nu)), self.E * nu / ((1 + nu) * (1 - 2 * nu))]  # Lame parameters
         print("mu_0: ", self.Lame[0], "    lambda:", self.Lame[1])
 
-        self.V_parameter = 0.5
+        self.V_parameter = 0.
         self.is_elastic_object = False
         self.H = [0.3]
         self.plasticity_boundary = [-250, 45]
-        self.curr_preset_id = 0
+        self.curr_preset_id = 1
         self.use_random_colors = False
-        self.particles_radius = 0.01
+        self.particles_radius = 0.003
 
     def init(self, mpm):
         mpm.init_objs(self.presets[self.curr_preset_id])
+
+    def init_from_ply(self, mpm):
+        mpm.init_from_ply()
 
     def viscosity_to_lame_parameter(self, V: float):
         if V < 0:
@@ -75,34 +78,35 @@ class Controller:
         with self.gui.sub_window("Color", 0., 0.65, 0.2, 0.15) as w:
             self.use_random_colors = w.checkbox("Use Random Colors", self.use_random_colors)
             if not self.use_random_colors:
-                old_color = (self.materials[DIY_MATERIAL].color[0], self.materials[DIY_MATERIAL].color[1],
-                             self.materials[DIY_MATERIAL].color[2])
+
+                old_color = (self.materials[WATER].color[0], self.materials[WATER].color[1],
+                             self.materials[WATER].color[2])
                 new_color = w.color_edit_3("Material Color", old_color)
                 if old_color != new_color:
                     for i in range(0, 3):
-                        self.materials[DIY_MATERIAL].color[i] = new_color[i]
+                        self.materials[WATER].color[i] = new_color[i]
 
-                old_transparency = self.materials[DIY_MATERIAL].color[3]
+                old_transparency = self.materials[WATER].color[3]
                 new_transparency = w.slider_float("Material Transparency", old_transparency, 0.0, 1.0)
                 if old_transparency != new_transparency:
-                    self.materials[DIY_MATERIAL].color[3] = new_transparency
+                    self.materials[WATER].color[3] = new_transparency
 
                 if self.curr_preset_id == 1:
-                    old_color2 = (self.materials[SOLID_CUBE].color[0], self.materials[SOLID_CUBE].color[1],
-                                  self.materials[SOLID_CUBE].color[2])
+                    old_color2 = (self.materials[BOX].color[0], self.materials[BOX].color[1],
+                                  self.materials[BOX].color[2])
                     new_color2 = w.color_edit_3("Cube Color", old_color2)
                     if old_color2 != new_color2:
                         for i in range(0, 3):
-                            self.materials[SOLID_CUBE].color[i] = new_color2[i]
+                            self.materials[BOX].color[i] = new_color2[i]
 
-                    old_transparency2 = self.materials[SOLID_CUBE].color[3]
+                    old_transparency2 = self.materials[BOX].color[3]
                     new_transparency2 = w.slider_float("Cube Transparency", old_transparency2, 0.0, 1.0)
                     if old_transparency2 != new_transparency2:
-                        self.materials[SOLID_CUBE].color[3] = new_transparency2
+                        self.materials[BOX].color[3] = new_transparency2
 
                 material_colors = []
-                material_colors.append(self.materials[DIY_MATERIAL].color)
-                material_colors.append(self.materials[SOLID_CUBE].color)
+                material_colors.append(self.materials[WATER].color)
+                material_colors.append(self.materials[BOX].color)
                 mpm.set_color_by_material(np.array(material_colors, dtype=np.float32))
 
         with self.gui.sub_window("Material Setting", 0., 0.8, 1.0, 0.2) as w:

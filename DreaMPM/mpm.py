@@ -1,7 +1,8 @@
 import taichi as ti
 
-from .materials import DIY_MATERIAL, SOLID_CUBE
-from .objects import CubeObject
+from .materials import *
+from .objects import *
+from .plyImporter import PlyImporter
 
 ti.init(arch=ti.gpu)
 
@@ -16,7 +17,8 @@ class MPM:
         self.G_number = G_number
         self.max_hard = max_hard
         self.dim = 3
-        self.P_number = self.G_number ** self.dim // 2 ** (self.dim - 1)  # 65536 or 8192
+        # self.P_number = self.G_number ** self.dim // 2 ** (self.dim - 1)  # 65536 or 8192
+        self.P_number = PLY_NUM+FLUID_NUM
         print("particle number:", self.P_number)  # you can check the particle number right here
 
         # time step
@@ -29,6 +31,7 @@ class MPM:
         self.bound = 3
         self.V_parameter = 0.5  # our proposed V parameter
         self.F_x = ti.Vector.field(self.dim, float, self.P_number)  # particle position
+        self.PLY_x=ti.Vector.field(self.dim, float, PLY_NUM)  # particle position
         self.F_v = ti.Vector.field(self.dim, float, self.P_number)  # particle velocity
         self.C = ti.Matrix.field(self.dim, self.dim, float, self.P_number)
         self.def_grad = ti.Matrix.field(3, 3, dtype=float, shape=self.P_number)  # deformation gradient
@@ -60,6 +63,66 @@ class MPM:
             self.F_colors_random[i] = ti.Vector([ti.random(), ti.random(), ti.random(), ti.random()])
             self.F_used[i] = 1
 
+    @ti.kernel
+    def process_from_ply(self, ply_num:int, material:int):
+        for i in range(ply_num):
+            j = FLUID_NUM+i
+            self.F_x[j]=self.PLY_x[i]
+            self.F_Jp[j] = 1
+            self.def_grad[j] = ti.Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+            self.C[j] = ti.Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+            self.F_v[j] = ti.Vector([0.0, 0.0, 0.0])
+            self.F_materials[j] = material
+            self.F_colors_random[j] = ti.Vector([ti.random(), ti.random(), ti.random(), ti.random()])
+            self.F_used[j] = 1
+
+    @ti.kernel
+    def set_fluid_unused(self, ply_num:int, material:int):
+        for i in range(FLUID_NUM):
+            self.F_used[i] = 0
+            # basically throw them away so they aren't rendered
+            self.F_x[i] = ti.Vector([533799.0, 533799.0, 533799.0])
+            self.F_Jp[i] = 1
+            self.def_grad[i] = ti.Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+            self.C[i] = ti.Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+            self.F_v[i] = ti.Vector([0.0, 0.0, 0.0])
+            self.F_materials[i] = material
+
+    def init_from_ply(self):
+        container_ply = PlyImporter("unlid-container.ply")
+        self.PLY_x.from_numpy(container_ply.get_array())
+        self.set_fluid_unused(container_ply.get_count(), WATER)
+        self.process_from_ply( container_ply.get_count(), BOX)
+
+
+    @ti.kernel
+    def spawn_fluid(self, first_par: int, last_par: int, x_begin: float, y_begin: float, z_begin: float,
+                         x_size: float, y_size: float, z_size: float, material: int):
+        for i in range(first_par, last_par):
+            self.F_x[i] = (
+                    ti.Vector([ti.random() for i in range(self.dim)]) * ti.Vector([x_size, y_size, z_size]) +
+                    ti.Vector([x_begin, y_begin, z_begin])
+            )
+            self.F_Jp[i] = 1
+            self.def_grad[i] = ti.Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+            self.C[i] = ti.Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+            self.F_v[i] = ti.Vector([0.0, -3.0, 0.0])
+            self.F_materials[i] = material
+            self.F_used[i] = 1
+    def init_cube_object(self, first_par: int, last_par: int, x_begin: float, y_begin: float, z_begin: float,
+                         x_size: float, y_size: float, z_size: float, material: int):
+        for i in range(first_par, last_par):
+            self.F_x[i] = (
+                    ti.Vector([ti.random() for i in range(self.dim)]) * ti.Vector([x_size, y_size, z_size]) +
+                    ti.Vector([x_begin, y_begin, z_begin])
+            )
+            self.F_Jp[i] = 1
+            self.def_grad[i] = ti.Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+            self.C[i] = ti.Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
+            self.F_v[i] = ti.Vector([0.0, 0.0, 0.0])
+            self.F_materials[i] = material
+            self.F_colors_random[i] = ti.Vector([ti.random(), ti.random(), ti.random(), ti.random()])
+            self.F_used[i] = 1
     @ti.kernel
     def reset(self):
         for p in self.F_used:
@@ -129,7 +192,7 @@ class MPM:
 
             mu, la = mu_0 * h, lambda_0 * h
 
-            if self.F_materials[p] == SOLID_CUBE:
+            if self.F_materials[p] == BOX:
                 h = self.max_hard
                 mu, la = 416.6 * h, 277.7 * h
 
@@ -141,7 +204,8 @@ class MPM:
 
                 orgin_sig = sig[d, d]  # singular values
                 new_sig = orgin_sig
-                if self.F_materials[p] == DIY_MATERIAL and not is_elastic_object:  # DIY_MATERIAL with Plasticity
+                if self.F_materials[p] == WATER and not is_elastic_object:  # DIY_MATERIAL with Plasticity
+                    mu=0
                     new_sig = ti.min(
                         ti.max(
                             orgin_sig,
@@ -162,7 +226,8 @@ class MPM:
             else:
                 # Reconstruct remain elastic deformation gradient after plasticity
                 self.def_grad[p] = U @ sig @ V.transpose()
-
+            if self.F_materials[p] == WATER and not is_elastic_object:  # DIY_MATERIAL with Plasticity
+                mu=0
             # Corotated used elastic F_dg
             # stress_part1
             # = P(F) * F.transposed()

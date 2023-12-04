@@ -5,6 +5,7 @@ from .mpm import MPM
 from .preset import Preset
 from .render import Render
 from .DMPM import DMPM
+from .Dragon import Dragon
 
 
 __version__ = "1.0.0"
