@@ -21,12 +21,12 @@ class Dragon:
 
     def run(self):
         start = PLY_NUM
-        end = PLY_NUM+500
+        end = PLY_NUM
         while self.controller.window.running:
-            if end < FLUID_NUM+PLY_NUM:
+            if end < FLUID_NUM:
                 self.mpm.spawn_fluid(start, end, 0.35, 0.6, 0.45, 0.05, 0.05, 0.05, WATER)
                 start = end
-                end += 1
+                end += 100
 
             for _ in range(self.steps):
                 self.mpm.substep(*self.controller.dt, *self.controller.GRAVITY, *self.controller.Lame,

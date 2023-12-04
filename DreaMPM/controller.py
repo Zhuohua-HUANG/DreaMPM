@@ -70,10 +70,10 @@ class Controller:
         #     if self.curr_preset_id != old_preset:
         #         self.init(mpm)
         #
-        # with self.gui.sub_window("Gravity", 0., 0.55, 0.2, 0.1) as w:
-        #     self.GRAVITY[0] = w.slider_float("x", self.GRAVITY[0], -10, 10)
-        #     self.GRAVITY[1] = w.slider_float("y", self.GRAVITY[1], -10, 10)
-        #     self.GRAVITY[2] = w.slider_float("z", self.GRAVITY[2], -10, 10)
+        with self.gui.sub_window("Gravity", 0., 0.55, 0.2, 0.1) as w:
+            self.GRAVITY[0] = w.slider_float("x", self.GRAVITY[0], -10, 10)
+            self.GRAVITY[1] = w.slider_float("y", self.GRAVITY[1], -20, 10)
+            self.GRAVITY[2] = w.slider_float("z", self.GRAVITY[2], -10, 10)
 
         with self.gui.sub_window("Color", 0., 0.65, 0.2, 0.15) as w:
             self.use_random_colors = w.checkbox("Use Random Colors", self.use_random_colors)

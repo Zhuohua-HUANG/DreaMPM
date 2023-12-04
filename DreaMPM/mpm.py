@@ -105,7 +105,7 @@ class MPM:
             self.F_Jp[i] = 1
             self.def_grad[i] = ti.Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
             self.C[i] = ti.Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
-            self.F_v[i] = ti.Vector([0.0, -3.0, 0.0])
+            self.F_v[i] = ti.Vector([0.0, -10.0, 0.0])
             self.F_materials[i] = material
             self.F_used[i] = 1
 
@@ -173,7 +173,7 @@ class MPM:
 
         # P2G
         for p in self.F_x:
-            if self.F_used[p] == 0:
+            if self.F_used[p] == 0 or self.F_materials == BOX:
                 continue
 
             Xp = self.F_x[p] / self.dx
